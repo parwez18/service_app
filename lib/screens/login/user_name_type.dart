@@ -7,7 +7,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
-import 'package:khujo_app/screens/login/service_provider_categories.dart';
+import 'package:khujo_app/repository/location_repository.dart';
+
 import 'package:khujo_app/screens/m_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
 
@@ -20,7 +21,8 @@ class UserNameTypeScreen extends StatefulWidget {
 
 class _UserNameTypeScreenState extends State<UserNameTypeScreen> {
   final TextEditingController _nameController = TextEditingController();
-  List<String> userType = ["Customer", "Provider"];
+  final LocationRepository _locationRepository = LocationRepository();
+
   String? selectedType;
   final _currentUserUid = FirebaseAuth.instance.currentUser!.uid;
   final _firestore = FirebaseFirestore.instance;
@@ -38,15 +40,24 @@ class _UserNameTypeScreenState extends State<UserNameTypeScreen> {
           'name': _nameController.text.trim(),
           'userType': selectedType,
         });
-        selectedType == "Customer"
-            ? Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => MScreen()),
-              )
-            : Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => ProviderMScreen()),
-              );
+        // Save location safely (won't break flow if GPS fails)
+        try {
+          await _locationRepository.saveUserAddress(_currentUserUid);
+        } catch (e) {
+          print("Location not saved: $e");
+        }
+        // Navigate to screen
+        if (selectedType == "Customer") {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => MScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => ProviderMScreen()),
+          );
+        }
         setState(() {
           isLoading = false;
         });

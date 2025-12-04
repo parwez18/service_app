@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:khujo_app/models/services_model.dart';
 import 'package:khujo_app/provider/datas_provider.dart';
+import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
 
 class EditServiceScreen extends ConsumerStatefulWidget {
@@ -84,7 +86,12 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
   }
 
   // Save Data of Updated Service
-  Future<void> updateService(String selectedServiceType) async {
+  Future<void> updateService(
+    String selectedServiceType,
+    String providerAddress,
+    double providerLat,
+    double providerLng,
+  ) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         isLoading = true;
@@ -111,6 +118,9 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
               "discountPrice":
                   double.tryParse(_discountPriceController.text.trim()) ?? 0.0,
               "serviceImage": finalImageUrl,
+              "providerAddress": providerAddress,
+              "lat": providerLat,
+              "lng": providerLng,
             });
         setState(() => isLoading = false);
 
@@ -138,7 +148,17 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final currentUserAsync = ref.watch(userDataProvider(currentUserId));
     final categoriesAsync = ref.watch(allCategoriesListProvider);
+    // Booking Service Categories
+    final bookingServiceCategoriesAsync = ref.watch(
+      allBookingServiceCategoriesListProvider,
+    );
+    //Travel Booking Categories
+    final travelBookingCategoriesAsync = ref.watch(
+      allTravelBookingCategoriesListProvider,
+    );
 
     return Scaffold(
       appBar: customAppBar("Edit Service"),
@@ -193,37 +213,71 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
                 SizedBox(height: 15.h),
 
                 // Service Type
-                categoriesAsync.when(
-                  data: (categoriesList) {
-                    final categoryTitles = categoriesList
-                        .map((cat) => cat.title)
-                        .toList();
-                    return DropdownButtonFormField2<String>(
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                      ),
-                      hint: const Text("Select Service Type"),
-                      items: categoryTitles
-                          .map(
-                            (category) => DropdownMenuItem(
-                              value: category,
-                              child: Text(category),
+                widget.serviceData.parent == "Booking Service"
+                    ? bookingServiceCategoriesAsync.when(
+                        data: (categoriesList) {
+                          final categoryTitles = categoriesList
+                              .map((cat) => cat.title)
+                              .toList();
+                          return DropdownButtonFormField2<String>(
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
                             ),
-                          )
-                          .toList(),
-                      value: selectedServiceType,
-                      onChanged: (value) =>
-                          setState(() => selectedServiceType = value!),
-                      validator: (value) =>
-                          value == null ? "Please select service type" : null,
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (err, _) => Text("Error: $err"),
-                ),
+                            hint: const Text("Select Service Type"),
+                            items: categoryTitles
+                                .map(
+                                  (category) => DropdownMenuItem(
+                                    value: category,
+                                    child: Text(category),
+                                  ),
+                                )
+                                .toList(),
+                            value: selectedServiceType,
+                            onChanged: (value) =>
+                                setState(() => selectedServiceType = value!),
+                            validator: (value) => value == null
+                                ? "Please select service type"
+                                : null,
+                          );
+                        },
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (err, _) => Text("Error: $err"),
+                      )
+                    : travelBookingCategoriesAsync.when(
+                        data: (categoriesList) {
+                          final categoryTitles = categoriesList
+                              .map((cat) => cat.title)
+                              .toList();
+                          return DropdownButtonFormField2<String>(
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                            ),
+                            hint: const Text("Select Service Type"),
+                            items: categoryTitles
+                                .map(
+                                  (category) => DropdownMenuItem(
+                                    value: category,
+                                    child: Text(category),
+                                  ),
+                                )
+                                .toList(),
+                            value: selectedServiceType,
+                            onChanged: (value) =>
+                                setState(() => selectedServiceType = value!),
+                            validator: (value) => value == null
+                                ? "Please select service type"
+                                : null,
+                          );
+                        },
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (err, _) => Text("Error: $err"),
+                      ),
                 SizedBox(height: 15.h),
 
                 // Description
@@ -316,7 +370,13 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
                         ),
                         onPressed: () async {
                           // To update Service
-                          await updateService(selectedServiceType);
+                          // await updateService(selectedServiceType);
+                          await updateService(
+                            selectedServiceType,
+                            currentUserAsync.value!.userAddress,
+                            currentUserAsync.value!.lat,
+                            currentUserAsync.value!.lng,
+                          );
                         },
                         child: Center(
                           child: isLoading

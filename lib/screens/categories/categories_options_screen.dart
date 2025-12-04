@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/provider/datas_provider.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
-import 'package:khujo_app/screens/home/categories/categories_full_list.dart';
+import 'package:khujo_app/screens/categories/categories_full_list.dart';
 import 'package:khujo_app/screens/home/services_widget.dart';
 
 class CategoriesOptionsScreen extends ConsumerStatefulWidget {
@@ -31,7 +31,7 @@ class _CategoriesOptionsScreenState
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+                crossAxisCount: 3,
                 crossAxisSpacing: 6.w,
               ),
               itemCount: allCategoriesData.length,
@@ -48,21 +48,35 @@ class _CategoriesOptionsScreenState
                     );
                   },
                   child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12), // your radius
-                      side: BorderSide(
-                        color: AppConstants.primaryColor,
-                        width: 1,
-                      ),
-                    ),
                     color: Colors.white,
-                    child: Center(
-                      child: Text(
-                        data.title,
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w400,
-                        ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(5.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.network(
+                            data.logoPath,
+                            height: 43.h,
+                            color: AppConstants.primaryColor,
+                            colorBlendMode: BlendMode.srcIn,
+                          ),
+                          SizedBox(height: 3.h),
+                          Center(
+                            child: Text(
+                              data.title,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

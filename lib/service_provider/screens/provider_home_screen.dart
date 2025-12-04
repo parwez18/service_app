@@ -2,11 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/provider/datas_provider.dart';
+import 'package:khujo_app/provider/user_provider.dart';
+import 'package:khujo_app/screens/categories/categories_options_screen.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
+import 'package:khujo_app/screens/login/send_otp_screen.dart';
+import 'package:khujo_app/screens/profile/profile_screen.dart';
 import 'package:khujo_app/service_provider/screens/add_services.dart/add_services_screen.dart';
 import 'package:khujo_app/service_provider/screens/add_services.dart/edit_service_screen.dart';
 
@@ -68,8 +73,9 @@ class _AddServicesScreenState extends ConsumerState<ProviderHomeScreen> {
   Widget build(BuildContext context) {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     final servicesAsync = ref.watch(specificServicesProvider(currentUserId));
+    final currentUserData = ref.watch(userDataProvider(currentUserId));
     return Scaffold(
-      appBar: customAppBar("Home"),
+      appBar: customAppBar("Khujo"),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppConstants.primaryColor,
         onPressed: () {
@@ -511,7 +517,152 @@ class _AddServicesScreenState extends ConsumerState<ProviderHomeScreen> {
         error: (err, _) => Center(child: Text(err.toString())),
         loading: () => Center(child: CircularProgressIndicator()),
       ),
-      drawer: Drawer(),
+      drawer: _drawarWidget(
+        ref: ref,
+        currentUserName: currentUserData.value?.name ?? "User",
+      ),
+    );
+  }
+}
+
+class _drawarWidget extends StatelessWidget {
+  final WidgetRef ref;
+  final String currentUserName;
+  const _drawarWidget({
+    super.key,
+    required this.ref,
+    required this.currentUserName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: Column(
+        children: [
+          Container(
+            height: 230.h,
+            width: 1.sw,
+            decoration: BoxDecoration(color: AppConstants.primaryColor),
+
+            child: Column(
+              children: [
+                SizedBox(height: 40.h),
+                Image.asset(
+                  "assets/images/user2.png",
+                  fit: BoxFit.cover,
+                  height: 130.h,
+                ),
+                Text(
+                  currentUserName,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 23.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10.h),
+
+          _buildSections(
+            icon: Icons.home,
+            title: "Home",
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          SizedBox(height: 7.h),
+          _buildSections(
+            icon: Iconsax.profile_circle5,
+            title: "Profile",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProfileScreen()),
+              );
+            },
+          ),
+          SizedBox(height: 7.h),
+          _buildSections(
+            icon: Iconsax.add,
+            title: "Add Service",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => AddServicesScreen()),
+              );
+            },
+          ),
+          SizedBox(height: 10.h),
+          Divider(thickness: 1, color: AppConstants.primaryColor),
+          SizedBox(height: 10.h),
+          _buildSections(
+            icon: Icons.logout,
+            title: "Logout",
+            onTap: () async {
+              // Logout Logic
+              try {
+                final logOutProvider = ref.read(authRepositoryProvider);
+                await logOutProvider.signOut();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => SendOtpScreen()),
+                );
+              } catch (e) {
+                print("Error during signout user :  ${e.toString()}");
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Common/Helper Widget
+class _buildSections extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  const _buildSections({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5.w),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          color: AppConstants.primaryColor,
+          child: Padding(
+            padding: EdgeInsets.only(top: 6.h, bottom: 6.h, left: 40.w),
+            child: Row(
+              children: [
+                Icon(icon, size: 23.sp, color: Colors.white),
+                SizedBox(width: 10.w),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -4,13 +4,20 @@ class UserModel {
   final String uid;
   final String name;
   final String phoneNumber;
-  final String userType; // e.g., "Service Provider" or "Customer"
+  final String userType;
   final String userAddress;
   final String userImage;
   final bool isVerified;
-  final List<String> userRoles; // e.g., ["Plumber", "Electrician"]
+  final List<String> userRoles;
   final Timestamp createdAt;
   final Timestamp updatedAt;
+
+  // short names
+  final double lat;
+  final double lng;
+
+  // NEW — short name for favourites
+  final List<String> favourites;
 
   UserModel({
     required this.uid,
@@ -23,9 +30,11 @@ class UserModel {
     required this.userRoles,
     required this.createdAt,
     required this.updatedAt,
+    required this.lat,
+    required this.lng,
+    required this.favourites,
   });
 
-  // ✅ Convert Firestore document to UserModel
   factory UserModel.fromDoc(Map<String, dynamic> doc, String docId) {
     return UserModel(
       uid: docId,
@@ -38,10 +47,16 @@ class UserModel {
       userRoles: List<String>.from(doc['userRoles'] ?? []),
       createdAt: doc['createdAt'] ?? Timestamp.now(),
       updatedAt: doc['updatedAt'] ?? Timestamp.now(),
+
+      // short names
+      lat: (doc['lat'] ?? 0).toDouble(),
+      lng: (doc['lng'] ?? 0).toDouble(),
+
+      // NEW
+      favourites: List<String>.from(doc['favourites'] ?? []),
     );
   }
 
-  // ✅ Convert UserModel to Firestore map
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -53,6 +68,13 @@ class UserModel {
       'userRoles': userRoles,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+
+      // short names
+      'lat': lat,
+      'lng': lng,
+
+      // NEW
+      'favourites': favourites,
     };
   }
 }

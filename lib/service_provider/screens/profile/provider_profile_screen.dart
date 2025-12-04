@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:khujo_app/provider/user_provider.dart';
+import 'package:khujo_app/repository/helper_repository/helper_repo.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
+import 'package:khujo_app/screens/profile/edit_profile_screen.dart';
 
 class ProviderProfileScreen extends ConsumerStatefulWidget {
   const ProviderProfileScreen({super.key});
@@ -16,75 +19,137 @@ class ProviderProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProviderProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final currentUserAync = ref.watch(userDataProvider(currentUserId));
     return Scaffold(
       appBar: customAppBar("Profile"),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 15.w),
-        child: Column(
-          children: [
-            SizedBox(height: 40.w),
-
-            // Image Section
-            CircleAvatar(
-              radius: 80,
-              child: Image.asset('assets/images/user2.png'),
-            ),
-            SizedBox(height: 20.h),
-            // Edit Profile
-            _buildSections(
-              icon: Icons.edit,
-              title: "Edit Profile",
-              onTap: () {},
-            ),
-            SizedBox(height: 10.h),
-            Container(
-              height: 2.h,
-              width: 1.sw,
-              color: const Color.fromARGB(255, 194, 193, 193),
-            ),
-            SizedBox(height: 10.h),
-            // Logout
-            GestureDetector(
-              onTap: () async {
-                // Logout Logic
-                try {
-                  final logOutProvider = ref.read(authRepositoryProvider);
-                  await logOutProvider.signOut();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => SendOtpScreen()),
-                  );
-                } catch (e) {
-                  print("Error during signout user :  ${e.toString()}");
-                }
-              },
-              child: Card(
-                color: Colors.white,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 60.w,
-                    top: 10.h,
-                    bottom: 10.h,
-                    right: 40.w,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout, size: 30.sp),
-                      SizedBox(width: 15.w),
-                      Text(
-                        "Logout",
-                        style: TextStyle(
-                          fontSize: 21.sp,
-                          fontWeight: FontWeight.w500,
-                        ),
+      body: currentUserAync.when(
+        data: (currentUserData) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 15.w),
+            child: Column(
+              children: [
+                SizedBox(height: 40.w),
+                // Image Section
+                CircleAvatar(
+                  radius: 80,
+                  child: Image.asset('assets/images/user2.png'),
+                ),
+                SizedBox(height: 20.h),
+                // Edit Profile
+                _buildSections(
+                  icon: Icons.edit,
+                  title: "Edit Profile",
+                  onTap: () {
+                    // Navigate to Edit Profile screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditProfileScreen(userData: currentUserData),
                       ),
-                    ],
+                    );
+                  },
+                ),
+                SizedBox(height: 5.h),
+                // Help & Support
+                _buildSections(
+                  icon: Icons.help_outline,
+                  title: "Help & Support",
+                  onTap: () {
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (_) => HelpSupportScreen(
+                    //       userGender: datas.gender.toString(),
+                    //     ),
+                    //   ),
+                    // );
+                  },
+                ),
+                SizedBox(height: 5.h),
+                // Terms & Conditions
+                _buildSections(
+                  icon: Icons.description_outlined,
+                  title: "Terms & Conditions",
+                  onTap: () async {
+                    try {
+                      await HelperRepoServices.openTermsAndConditions();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Could not open link')),
+                      );
+                    }
+                  },
+                ),
+                SizedBox(height: 5.h),
+                // Privacy Policy
+                _buildSections(
+                  icon: Icons.privacy_tip_outlined,
+                  title: "Privacy Policy",
+                  onTap: () async {
+                    try {
+                      await HelperRepoServices.openPrivacyPolicy();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Could not open link')),
+                      );
+                    }
+                  },
+                ),
+                SizedBox(height: 10.h),
+                Container(
+                  height: 2.h,
+                  width: 1.sw,
+                  color: const Color.fromARGB(255, 194, 193, 193),
+                ),
+                SizedBox(height: 10.h),
+                // Logout
+                GestureDetector(
+                  onTap: () async {
+                    // Logout Logic
+                    try {
+                      final logOutProvider = ref.read(authRepositoryProvider);
+                      await logOutProvider.signOut();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => SendOtpScreen()),
+                      );
+                    } catch (e) {
+                      print("Error during signout user :  ${e.toString()}");
+                    }
+                  },
+                  child: Card(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: 60.w,
+                        top: 10.h,
+                        bottom: 10.h,
+                        right: 40.w,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, size: 30.sp),
+                          SizedBox(width: 15.w),
+                          Text(
+                            "Logout",
+                            style: TextStyle(
+                              fontSize: 21.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
+        error: (err, _) => Center(child: Text(err.toString())),
+        loading: () => Center(child: CircularProgressIndicator()),
       ),
     );
   }

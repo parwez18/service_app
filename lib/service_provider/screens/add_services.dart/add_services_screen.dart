@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -28,7 +29,8 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
   final TextEditingController _discountPriceController =
       TextEditingController();
 
-  String? selectedServiceType;
+  String? selectedSubServiceType;
+  String? selectedParentServiceType;
   String? serviceImageUrl; // you can later replace with image picker
 
   bool isLoading = false;
@@ -68,6 +70,8 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
     String providerId,
     String providerName,
     String providerAddress,
+    double providerLat,
+    double providerLng,
     String providerNumber,
   ) async {
     if (_formKey.currentState!.validate()) {
@@ -87,9 +91,12 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
         "providerName": providerName,
         "providerNumber": providerNumber,
         "providerAddress": providerAddress,
+        "lat": providerLat,
+        "lng": providerLng,
         "serviceTitle": _titleController.text.trim(),
         "description": _descController.text.trim(),
-        "serviceType": selectedServiceType,
+        "serviceType": selectedSubServiceType,
+        "parent": selectedParentServiceType,
         "originalPrice":
             double.tryParse(_originalPriceController.text.trim()) ?? 0.0,
         "discountPrice":
@@ -107,7 +114,7 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
       _formKey.currentState!.reset();
       setState(() {
         _selectedImage = null;
-        selectedServiceType = null;
+        selectedSubServiceType = null;
       });
 
       Navigator.pop(context);
@@ -118,10 +125,19 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
   Widget build(BuildContext context) {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     final currentUserAsync = ref.watch(userDataProvider(currentUserId));
-    // Get all categories Data List
-    final categoriesAsync = ref.watch(allCategoriesListProvider);
+
+    // Get all Parent-categories Data List
+    final parent_CategoriesAsync = ref.watch(allParentCategoriesListProvider);
+    // Booking Service Categories
+    final bookingServiceCategoriesAsync = ref.watch(
+      allBookingServiceCategoriesListProvider,
+    );
+    //Travel Booking Categories
+    final travelBookingCategoriesAsync = ref.watch(
+      allTravelBookingCategoriesListProvider,
+    );
     return Scaffold(
-      appBar: customAppBar("Add Services"),
+      appBar: customAppBar("Add Service"),
 
       body: SingleChildScrollView(
         child: currentUserAsync.when(
@@ -179,9 +195,9 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
                       },
                     ),
                     const SizedBox(height: 15),
-                    // Service Type
-                    // 🧰 Service Type (Dynamic from Firestore)
-                    categoriesAsync.when(
+
+                    // Service Parent-Type
+                    parent_CategoriesAsync.when(
                       data: (categoriesList) {
                         final categoryTitles = categoriesList
                             .map((cat) => cat.title)
@@ -202,9 +218,9 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
                                 ),
                               )
                               .toList(),
-                          value: selectedServiceType,
+                          value: selectedParentServiceType,
                           onChanged: (value) =>
-                              setState(() => selectedServiceType = value),
+                              setState(() => selectedParentServiceType = value),
                           validator: (value) => value == null
                               ? "Please select service type"
                               : null,
@@ -214,6 +230,80 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
                           const Center(child: CircularProgressIndicator()),
                       error: (err, _) => Text("Error: $err"),
                     ),
+
+                    const SizedBox(height: 15),
+                    // Service Sub-Type
+                    selectedParentServiceType == "Booking Service"
+                        ? bookingServiceCategoriesAsync.when(
+                            data: (categoriesList) {
+                              final categoryTitles = categoriesList
+                                  .map((cat) => cat.title)
+                                  .toList();
+
+                              return DropdownButtonFormField2<String>(
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(15.r),
+                                  ),
+                                ),
+                                hint: const Text("Select Service Categorie"),
+                                items: categoryTitles
+                                    .map(
+                                      (category) => DropdownMenuItem(
+                                        value: category,
+                                        child: Text(category),
+                                      ),
+                                    )
+                                    .toList(),
+                                value: selectedSubServiceType,
+                                onChanged: (value) => setState(
+                                  () => selectedSubServiceType = value,
+                                ),
+                                validator: (value) => value == null
+                                    ? "Please select service Categorie"
+                                    : null,
+                              );
+                            },
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (err, _) => Text("Error: $err"),
+                          )
+                        : travelBookingCategoriesAsync.when(
+                            data: (categoriesList) {
+                              final categoryTitles = categoriesList
+                                  .map((cat) => cat.title)
+                                  .toList();
+
+                              return DropdownButtonFormField2<String>(
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(15.r),
+                                  ),
+                                ),
+                                hint: const Text("Select Service Categorie"),
+                                items: categoryTitles
+                                    .map(
+                                      (category) => DropdownMenuItem(
+                                        value: category,
+                                        child: Text(category),
+                                      ),
+                                    )
+                                    .toList(),
+                                value: selectedSubServiceType,
+                                onChanged: (value) => setState(
+                                  () => selectedSubServiceType = value,
+                                ),
+                                validator: (value) => value == null
+                                    ? "Please select service Categorie"
+                                    : null,
+                              );
+                            },
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (err, _) => Text("Error: $err"),
+                          ),
 
                     const SizedBox(height: 15),
 
@@ -307,10 +397,19 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
                               ),
                             ),
                             onPressed: () async {
+                              // await addService(
+                              //   // currentUserData.uid,
+                              //   // currentUserData.name,
+                              //   // currentUserData.userAddress,
+                              //   // currentUserData.phoneNumber,
+
+                              // );
                               await addService(
                                 currentUserData.uid,
                                 currentUserData.name,
                                 currentUserData.userAddress,
+                                currentUserData.lat.toDouble(),
+                                currentUserData.lng.toDouble(),
                                 currentUserData.phoneNumber,
                               );
                             },

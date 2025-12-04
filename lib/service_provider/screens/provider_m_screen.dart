@@ -28,7 +28,6 @@ class _ProviderMScreenState extends State<ProviderMScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: Text("M Screen")),
       body: navTabs[selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: [
