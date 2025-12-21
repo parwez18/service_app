@@ -5,11 +5,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/provider/user_provider.dart';
-import 'package:khujo_app/screens/Wishlist/wishlist_screen.dart';
+import 'package:khujo_app/screens/Wishlist/wishlist_mscreen.dart';
+import 'package:khujo_app/screens/Wishlist/travel_wishlist_widget.dart';
 import 'package:khujo_app/screens/categories/categories_options_screen.dart';
 import 'package:khujo_app/screens/home/home_m_screen.dart';
-import 'package:khujo_app/screens/home/booking_service_screen.dart';
-import 'package:khujo_app/screens/nearby/nearby_screen.dart';
+import 'package:khujo_app/screens/home/booking_service/booking_service_screen.dart';
+import 'package:khujo_app/screens/nearby/nearby_mscreen.dart';
+import 'package:khujo_app/screens/nearby/travel_nearby_widget.dart';
 import 'package:khujo_app/screens/profile/profile_screen.dart';
 
 class MScreen extends ConsumerStatefulWidget {
@@ -38,13 +40,18 @@ class _MScreenState extends ConsumerState<MScreen> {
       error: (e, _) => Scaffold(body: Center(child: Text(e.toString()))),
       data: (user) {
         final favouriteIds = user?.favourites ?? [];
+        final bookingFavourites = user?.bookingFavourites ?? [];
 
         /// 👇 Now navTabs is dynamic & correct
         List<Widget> navTabs = [
           HomeMScreen(),
-          NearbyScreen(),
+          NearbyMscreen(),
           CategoriesOptionsScreen(),
-          WishlistScreen(favouriteIds),
+          // WishlistScreen(favouriteIds),
+          WishlistMscreen(
+            favouriteIds: favouriteIds,
+            bookingFavourites: bookingFavourites,
+          ),
           ProfileScreen(),
         ];
 

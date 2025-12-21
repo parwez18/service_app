@@ -21,6 +21,7 @@ class _CategoriesOptionsScreenState
   Widget build(BuildContext context) {
     final allCategoriesAsync = ref.watch(allCategoriesListProvider);
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 247, 246, 246),
       appBar: customAppBar("Categories"),
       body: allCategoriesAsync.when(
         data: (allCategoriesData) {
@@ -48,6 +49,7 @@ class _CategoriesOptionsScreenState
                     );
                   },
                   child: Card(
+                    elevation: 4,
                     color: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.r),

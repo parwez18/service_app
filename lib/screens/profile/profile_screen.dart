@@ -7,6 +7,8 @@ import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/repository/helper_repository/helper_repo.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
+import 'package:khujo_app/screens/profile/address_screen.dart';
+import 'package:khujo_app/screens/profile/bookings/bookings_mscreen.dart';
 import 'package:khujo_app/screens/profile/edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -22,6 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     final currentUserAync = ref.watch(userDataProvider(currentUserId));
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 250, 248, 248),
       appBar: customAppBar("Profile"),
       body: currentUserAync.when(
         data: (currentUserData) {
@@ -38,6 +41,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 SizedBox(height: 20.h),
 
+                SizedBox(height: 5.h),
                 // Edit Profile
                 _buildSections(
                   icon: Icons.edit,
@@ -49,6 +53,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       MaterialPageRoute(
                         builder: (_) =>
                             EditProfileScreen(userData: currentUserData),
+                      ),
+                    );
+                  },
+                ),
+
+                // Address / Location
+                _buildSections(
+                  icon: Icons.location_on,
+                  title: "Location",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AddressScreen(userData: currentUserData),
+                      ),
+                    );
+                  },
+                ),
+
+                // Bookings
+                _buildSections(
+                  icon: Icons.book_outlined,
+                  title: "Bookings",
+                  onTap: () {
+                    // Navigate to Edit Profile screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            BookingsMscreen(userData: currentUserData),
                       ),
                     );
                   },
@@ -175,6 +210,7 @@ class _buildSections extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
+        elevation: 4,
         color: Colors.white,
         child: Padding(
           padding: EdgeInsets.only(

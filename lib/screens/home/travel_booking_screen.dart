@@ -28,6 +28,7 @@ class _TravelBookingScreenState extends ConsumerState<TravelBookingScreen> {
     );
 
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 247, 246, 246),
       body: allTravelBookingCategoriesAsync.when(
         data: (allCategoriesData) {
           if (allCategoriesData.isEmpty) {

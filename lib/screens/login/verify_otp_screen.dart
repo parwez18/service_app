@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,6 +9,7 @@ import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/screens/login/user_name_type.dart';
 import 'package:khujo_app/screens/m_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
+import 'package:khujo_app/services/notifiction_service.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class VerifyOtpScreen extends ConsumerStatefulWidget {
@@ -33,6 +35,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -106,6 +109,12 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                         final currentUser = FirebaseAuth.instance.currentUser;
                         if (currentUser == null) {
                           throw Exception("User not authenticated");
+                        }
+
+                        // Save FCM token after successful login
+                        final token = await FirebaseMessaging.instance.getToken();
+                        if (token != null) {
+                          await NotificationService.saveFCMToken(token);
                         }
 
                         // Fetch user data from Firestore

@@ -48,7 +48,7 @@ class LocationRepository {
       p.locality,
       p.postalCode,
       p.country,
-    ].where((e) => e != null && e!.isNotEmpty).join(", ");
+    ].where((e) => e != null && e.isNotEmpty).join("- ");
   }
 
   /// Get combined location + address

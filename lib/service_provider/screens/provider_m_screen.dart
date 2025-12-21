@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 
 import 'package:khujo_app/screens/profile/profile_screen.dart';
+import 'package:khujo_app/service_provider/screens/bookings_for_service_provider/booking_mscreen.dart';
 
 import 'package:khujo_app/service_provider/screens/profile/provider_profile_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_home_screen.dart';
@@ -17,7 +18,11 @@ class ProviderMScreen extends StatefulWidget {
 
 class _ProviderMScreenState extends State<ProviderMScreen> {
   int selectedIndex = 0;
-  List<Widget> navTabs = [ProviderHomeScreen(), ProviderProfileScreen()];
+  List<Widget> navTabs = [
+    ProviderHomeScreen(),
+    BookingMscreen(),
+    ProviderProfileScreen(),
+  ];
 
   void onTaped(int index) {
     setState(() {
@@ -34,6 +39,10 @@ class _ProviderMScreenState extends State<ProviderMScreen> {
           BottomNavigationBarItem(
             icon: Icon(Iconsax.add_circle, size: 27.sp),
             label: "Add Services",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book_online, size: 27.sp),
+            label: "Bookings",
           ),
           BottomNavigationBarItem(
             icon: Icon(Iconsax.profile_circle, size: 27.sp),

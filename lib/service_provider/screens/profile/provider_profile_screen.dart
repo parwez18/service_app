@@ -7,6 +7,7 @@ import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/repository/helper_repository/helper_repo.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
+import 'package:khujo_app/screens/profile/address_screen.dart';
 import 'package:khujo_app/screens/profile/edit_profile_screen.dart';
 
 class ProviderProfileScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class _ProfileScreenState extends ConsumerState<ProviderProfileScreen> {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     final currentUserAync = ref.watch(userDataProvider(currentUserId));
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 247, 246, 246),
       appBar: customAppBar("Profile"),
       body: currentUserAync.when(
         data: (currentUserData) {
@@ -47,6 +49,21 @@ class _ProfileScreenState extends ConsumerState<ProviderProfileScreen> {
                       MaterialPageRoute(
                         builder: (_) =>
                             EditProfileScreen(userData: currentUserData),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 5.h),
+                // Address / Location
+                _buildSections(
+                  icon: Icons.location_on,
+                  title: "Location",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AddressScreen(userData: currentUserData),
                       ),
                     );
                   },

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,6 +10,7 @@ import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
 import 'package:khujo_app/screens/m_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
+import 'package:khujo_app/services/notifiction_service.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -46,6 +48,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       // User logged in → fetch user data directly from Firestore
       debugPrint("Fetching user data for UID: ${user.uid}");
 
+      // Update FCM token for logged-in user
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await NotificationService.saveFCMToken(token);
+        debugPrint("FCM Token updated in splash screen");
+      }
+
       final userDoc = await _firestore
           .collection('users')
           .doc(user.uid)
@@ -74,12 +83,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           context,
           MaterialPageRoute(builder: (_) => const MScreen()),
         );
+        // Handle any pending notification navigation
+        NotificationService.handlePendingNavigation();
       } else if (userType == "Service Provider") {
         // Navigate to ServiceProvider Home Screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => ProviderMScreen()),
         );
+        // Handle any pending notification navigation
+        NotificationService.handlePendingNavigation();
       } else {
         // Invalid or missing userType
         debugPrint("Invalid userType: $userType");

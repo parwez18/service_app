@@ -18,6 +18,7 @@ class UserModel {
 
   // NEW — short name for favourites
   final List<String> favourites;
+  final List<String> bookingFavourites;
 
   UserModel({
     required this.uid,
@@ -33,6 +34,7 @@ class UserModel {
     required this.lat,
     required this.lng,
     required this.favourites,
+    required this.bookingFavourites,
   });
 
   factory UserModel.fromDoc(Map<String, dynamic> doc, String docId) {
@@ -54,6 +56,7 @@ class UserModel {
 
       // NEW
       favourites: List<String>.from(doc['favourites'] ?? []),
+      bookingFavourites: List<String>.from(doc['bookingFavourites'] ?? []),
     );
   }
 
@@ -75,6 +78,7 @@ class UserModel {
 
       // NEW
       'favourites': favourites,
+      'bookingFavourites': bookingFavourites,
     };
   }
 }

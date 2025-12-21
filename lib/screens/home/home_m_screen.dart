@@ -7,7 +7,9 @@ import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/screens/categories/categories_options_screen.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
-import 'package:khujo_app/screens/home/booking_service_screen.dart';
+import 'package:khujo_app/screens/home/booking_service/booking_service_screen.dart';
+import 'package:khujo_app/screens/home/location_search_screen.dart';
+import 'package:khujo_app/screens/home/location_top_bar_widget.dart';
 import 'package:khujo_app/screens/home/travel_booking_screen.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
 import 'package:khujo_app/screens/profile/profile_screen.dart';
@@ -30,58 +32,73 @@ class _HomeMScreenState extends ConsumerState<HomeMScreen> {
 
     final currentUserData = ref.watch(userDataProvider(currentUserId));
     return Scaffold(
-      appBar: customAppBar("Khujo"),
-      body: Column(
-        children: [
-          SizedBox(height: 10.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(parentCategories.length, (index) {
-                var data = parentCategories[index];
-                final isSelecetd = selectedIndex == index;
-                return Flexible(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 7.w),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedIndex = index;
-                        });
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isSelecetd
-                              ? AppConstants.primaryColor
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                        height: 44.h,
-                        child: Center(
-                          child: Text(
-                            data,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 20.sp,
-                              color: isSelecetd ? Colors.white : Colors.black,
+      backgroundColor: const Color.fromARGB(255, 247, 246, 246),
+      appBar: AppBar(
+        backgroundColor: AppConstants.primaryColor,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            LocationTopBarWidget(
+              address: currentUserData.value!.userAddress,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => LocationSearchScreen()),
+                );
+              },
+            ),
+            SizedBox(height: 10.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(parentCategories.length, (index) {
+                  var data = parentCategories[index];
+                  final isSelecetd = selectedIndex == index;
+                  return Flexible(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 7.w),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedIndex = index;
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelecetd
+                                ? AppConstants.primaryColor
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          height: 44.h,
+                          child: Center(
+                            child: Text(
+                              data,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 20.sp,
+                                color: isSelecetd ? Colors.white : Colors.black,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18.w),
-              child: screens[selectedIndex],
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 18.w),
+                child: screens[selectedIndex],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       drawer: _drawarWidget(
         ref: ref,
