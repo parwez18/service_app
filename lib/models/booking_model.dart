@@ -3,11 +3,13 @@ import 'package:khujo_app/models/booking_service_item.dart';
 
 class BookingModel {
   final String bookingId;
+  final String bookedServiceId;
   final DateTime bookingDate;
   final String bookingStartTime;
   final String bookingEndTime;
   final String bookingTime;
   final DateTime createdAt;
+  final DateTime updatedAt;
   final String paymentMethod;
   final String paymentStatus;
   final String refund;
@@ -44,11 +46,13 @@ class BookingModel {
 
   BookingModel({
     required this.bookingId,
+    required this.bookedServiceId,
     required this.bookingDate,
     required this.bookingStartTime,
     required this.bookingEndTime,
     required this.bookingTime,
     required this.createdAt,
+    required this.updatedAt,
     required this.paymentMethod,
     required this.paymentStatus,
     required this.refund,
@@ -81,11 +85,16 @@ class BookingModel {
   factory BookingModel.fromMap(Map<String, dynamic> map) {
     return BookingModel(
       bookingId: map['bookingId'] ?? '',
+      bookedServiceId: map['bookedServiceId'] ?? '',
       bookingDate: (map['bookingDate'] as Timestamp).toDate(),
       bookingStartTime: map['bookingStartTime'] ?? '',
       bookingEndTime: map['bookingEndTime'] ?? '',
       bookingTime: map['bookingTime'] ?? '',
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      updatedAt: map['updatedAt'] != null
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : (map['createdAt'] as Timestamp).toDate(),
+
       paymentMethod: map['paymentMethod'] ?? '',
       paymentStatus: map['paymentStatus'] ?? '',
       refund: map['refund'] ?? '',
@@ -123,11 +132,13 @@ class BookingModel {
   Map<String, dynamic> toMap() {
     return {
       'bookingId': bookingId,
+      'bookedServiceId': bookedServiceId,
       'bookingDate': Timestamp.fromDate(bookingDate),
       'bookingStartTime': bookingStartTime,
       'bookingEndTime': bookingEndTime,
       'bookingTime': bookingTime,
       'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
       'paymentMethod': paymentMethod,
       'paymentStatus': paymentStatus,
       'refund': refund,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
+import 'package:khujo_app/service_provider/screens/bookings_for_service_provider/canceled_booking_SP_widget.dart';
 
 import 'package:khujo_app/service_provider/screens/bookings_for_service_provider/completed_bookings_SP_screen.dart';
 import 'package:khujo_app/service_provider/screens/bookings_for_service_provider/new_booking_requests_widget.dart';
@@ -23,6 +24,7 @@ class _BookingMscreenState extends State<BookingMscreen> {
     "Ongoing",
     "Completed",
     "Rejected",
+    "Cancelled",
   ];
   List<Widget> screens = [
     NeBookingsRequestSPWidget(),
@@ -30,6 +32,7 @@ class _BookingMscreenState extends State<BookingMscreen> {
     OngoingBookingsSPWidget(),
     CompletedBookingsSPWidget(),
     RejectedBookingsSPWidget(),
+    CanceledBookingSpWidget(),
   ];
   int selectedIndex = 0;
   @override

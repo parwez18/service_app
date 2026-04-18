@@ -9,6 +9,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
 import 'package:khujo_app/screens/m_screen.dart';
+import 'package:khujo_app/screens/subscription/sp_subscription_mandate_screen.dart';
+import 'package:khujo_app/screens/subscription/sp_subscription_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
 import 'package:khujo_app/services/notifiction_service.dart';
 
@@ -29,13 +31,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     _checkLogin();
   }
 
-  // To Check that User is loged in or not
+  // To Check that User is logged in or not
   Future<void> _checkLogin() async {
-    await Future.delayed(const Duration(seconds: 2));
     final user = _auth.currentUser;
 
     if (user == null) {
-      // Not logged in → go to OTP screen
+      // Show splash briefly for branding, then go to OTP screen
+      await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -45,33 +47,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     try {
-      // User logged in → fetch user data directly from Firestore
       debugPrint("Fetching user data for UID: ${user.uid}");
 
-      // Update FCM token for logged-in user
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token != null) {
-        await NotificationService.saveFCMToken(token);
-        debugPrint("FCM Token updated in splash screen");
-      }
+      // Run splash delay and Firestore fetch in parallel
+      final results = await Future.wait([
+        Future.delayed(const Duration(seconds: 1)),
+        _firestore
+            .collection('users')
+            .doc(user.uid)
+            .get()
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw Exception("Timeout fetching user data from Firestore");
+              },
+            ),
+      ]);
 
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .get()
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception("Timeout fetching user data from Firestore");
-            },
-          );
+      final userDoc = results[1] as DocumentSnapshot;
+
+      // Update FCM token in the background (don't block navigation)
+      FirebaseMessaging.instance.getToken().then((token) {
+        if (token != null) {
+          NotificationService.saveFCMToken(token);
+        }
+      });
 
       if (!userDoc.exists) {
         debugPrint("User document does not exist in Firestore");
         throw Exception("User document not found");
       }
 
-      final userData = userDoc.data();
+      final userData = userDoc.data() as Map<String, dynamic>?;
       final userType = userData?['userType'] as String?;
 
       debugPrint("User data loaded - UserType: $userType");
@@ -83,25 +90,39 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           context,
           MaterialPageRoute(builder: (_) => const MScreen()),
         );
-        // Handle any pending notification navigation
         NotificationService.handlePendingNavigation();
       } else if (userType == "Service Provider") {
-        // Navigate to ServiceProvider Home Screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => ProviderMScreen()),
-        );
-        // Handle any pending notification navigation
-        NotificationService.handlePendingNavigation();
+        final sub =
+            userData?['subscription'] as Map<String, dynamic>? ?? {};
+        final subStatus = sub['status'] as String? ?? 'inactive';
+        final introPaid = sub['introPaid'] as bool? ?? false;
+        final phone = userData?['phoneNumber'] as String? ?? '';
+
+        if (subStatus == 'active') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => ProviderMScreen()),
+          );
+        } else if (introPaid) {
+          // ₹8 already paid — skip to autopay setup page
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SPSubscriptionMandateScreen(phone: phone),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const SPSubscriptionScreen()),
+          );
+        }
       } else {
-        // Invalid or missing userType
         debugPrint("Invalid userType: $userType");
         throw Exception("Invalid user type");
       }
     } catch (e) {
-      // Handle errors (user not found, network issues, etc.)
       debugPrint("Error loading user data: $e");
-      // Navigate to login screen on error
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -125,12 +146,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               width: 320.w,
               fit: BoxFit.contain,
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 8.h),
             Text(
-              "Khujo App",
+              "Khujo",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 30.sp,
+                fontSize: 35.sp,
                 fontWeight: FontWeight.w500,
               ),
             ),

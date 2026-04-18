@@ -61,7 +61,7 @@ class _LocationSearchScreenState extends State<LocationSearchScreen> {
 
       // Save current location to Firestore
       await locationRepo.saveUserAddress(userId);
-
+    
       Navigator.pop(context);
     } catch (e) {
       print("Error getting current location: $e");

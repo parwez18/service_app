@@ -8,6 +8,8 @@ import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/screens/login/user_name_type.dart';
 import 'package:khujo_app/screens/m_screen.dart';
+import 'package:khujo_app/screens/subscription/sp_subscription_mandate_screen.dart';
+import 'package:khujo_app/screens/subscription/sp_subscription_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
 import 'package:khujo_app/services/notifiction_service.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -22,13 +24,14 @@ class VerifyOtpScreen extends ConsumerStatefulWidget {
 class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   final TextEditingController _otpController = TextEditingController();
   final GlobalKey<FormState> _key = GlobalKey<FormState>();
-  final _firestore = FirebaseFirestore.instance;
 
-  // @override
-  // void dispose() {
-  //   _otpController.dispose();
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    // Don't dispose _otpController manually — PinCodeTextField
+    // holds an internal listener that outlives this State's dispose.
+    // The controller will be GC'd with this State object.
+    super.dispose();
+  }
 
   bool isLoading = false;
 
@@ -103,62 +106,71 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                         isLoading = true;
                       });
                       try {
-                        await verifyOTPProvider.verifyOTP(otp);
+                        final result = await verifyOTPProvider.verifyOTP(otp);
+                        final isNewUser = result['isNewUser'] as bool;
+                        final userType = result['userType'] as String?;
 
-                        // Check if user is authenticated
-                        final currentUser = FirebaseAuth.instance.currentUser;
-                        if (currentUser == null) {
-                          throw Exception("User not authenticated");
-                        }
-
-                        // Save FCM token after successful login
-                        final token = await FirebaseMessaging.instance.getToken();
-                        if (token != null) {
-                          await NotificationService.saveFCMToken(token);
-                        }
-
-                        // Fetch user data from Firestore
-                        final userDoc = await _firestore
-                            .collection('users')
-                            .doc(currentUser.uid)
-                            .get();
+                        // Save FCM token in the background (don't block navigation)
+                        FirebaseMessaging.instance.getToken().then((token) {
+                          if (token != null) {
+                            NotificationService.saveFCMToken(token);
+                          }
+                        });
 
                         if (!mounted) return;
 
-                        if (!userDoc.exists) {
-                          // New user - go to user setup screen
+                        if (isNewUser || userType == null || userType.isEmpty) {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const UserNameTypeScreen(),
                             ),
                           );
+                        } else if (userType == "Customer") {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MScreen()),
+                          );
                         } else {
-                          // Existing user - check user type
-                          final userData = userDoc.data();
-                          final userType = userData?['userType'] as String?;
+                          // Existing Service Provider — check subscription status
+                          final uid =
+                              FirebaseAuth.instance.currentUser?.uid ?? '';
+                          final doc = await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .get();
+                          final sub =
+                              doc.data()?['subscription']
+                                  as Map<String, dynamic>? ??
+                              {};
+                          final subStatus =
+                              sub['status'] as String? ?? 'inactive';
+                          final introPaid = sub['introPaid'] as bool? ?? false;
+                          final phone =
+                              doc.data()?['phoneNumber'] as String? ?? '';
 
-                          if (userType == null || userType.isEmpty) {
-                            // User exists but no type set
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const UserNameTypeScreen(),
-                              ),
-                            );
-                          } else if (userType == "Customer") {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const MScreen(),
-                              ),
-                            );
-                          } else {
-                            // Service Provider
+                          if (!mounted) return;
+
+                          if (subStatus == 'active') {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const ProviderMScreen(),
+                              ),
+                            );
+                          } else if (introPaid) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    SPSubscriptionMandateScreen(phone: phone),
+                              ),
+                            );
+                          } else {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SPSubscriptionScreen(),
                               ),
                             );
                           }

@@ -29,11 +29,10 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
-    // Get and save FCM token
+    // Get FCM token (saving is handled after login in splash/verify screens)
     String? token = await _messaging.getToken();
     if (token != null) {
       print("FCM Token: $token");
-      await saveFCMToken(token);
     }
 
     // Listen to foreground messages

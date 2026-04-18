@@ -147,7 +147,8 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
 
     // Check if selected date is today
     final now = DateTime.now();
-    final isToday = selectedDate != null &&
+    final isToday =
+        selectedDate != null &&
         selectedDate!.year == now.year &&
         selectedDate!.month == now.month &&
         selectedDate!.day == now.day;
@@ -241,11 +242,18 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
 
   // Pick date
   Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final lastDate = now.add(const Duration(days: 30));
+    // Find the nearest working day to use as initialDate
+    var initialDate = now;
+    while (!isWorkingDay(initialDate) && initialDate.isBefore(lastDate)) {
+      initialDate = initialDate.add(const Duration(days: 1));
+    }
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
+      initialDate: initialDate,
+      firstDate: now,
+      lastDate: lastDate,
       selectableDayPredicate: (date) => isWorkingDay(date),
     );
     if (date != null) {
@@ -303,6 +311,7 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
         'serviceImage': widget.serviceData.imageUrl,
         'providerAddress': widget.serviceData.providerAddress,
         'providerPhone': widget.serviceData.ownerNumber,
+        'bookedServiceId': widget.serviceData.id,
         'selectedServices': widget.selectedServices
             .map(
               (s) => {'name': s.name, 'price': s.price, 'duration': s.duration},

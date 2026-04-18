@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:khujo_app/provider/datas_provider.dart';
 import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/repository/distance_helper.dart';
@@ -30,6 +32,7 @@ class _BookingServiceWidgetState extends ConsumerState<BookingServiceWidget> {
     final bookingServiceAsync = ref.watch(
       getBookingServiceProvider(widget.serviceCategoryName),
     );
+
     return Column(
       children: [
         TextFormField(
@@ -74,6 +77,7 @@ class _BookingServiceWidgetState extends ConsumerState<BookingServiceWidget> {
                   data.lat,
                   data.lng,
                 );
+                final averageRating = ref.watch(averageRatingProvider(data.id));
                 return Card(
                   color: Colors.white,
                   elevation: 2,
@@ -164,7 +168,7 @@ class _BookingServiceWidgetState extends ConsumerState<BookingServiceWidget> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
 
-                                // Provider Name with Icon
+                                // Service Category with Icon
                                 Row(
                                   children: [
                                     Icon(
@@ -187,7 +191,30 @@ class _BookingServiceWidgetState extends ConsumerState<BookingServiceWidget> {
                                   ],
                                 ),
                                 SizedBox(height: 4.h),
-
+                                Padding(
+                                  padding: EdgeInsets.only(left: 5.w),
+                                  child: Text(
+                                    averageRating.toStringAsFixed(1),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    ...List.generate(5, (index) {
+                                      return Icon(
+                                        Iconsax.star1,
+                                        size: 22,
+                                        color: index < averageRating
+                                            ? Colors.amber
+                                            : Colors.grey.shade400,
+                                      );
+                                    }),
+                                    SizedBox(width: 10.w),
+                                  ],
+                                ),
                                 SizedBox(height: 8.h),
 
                                 // Distance

@@ -1,22 +1,32 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/models/booking_model.dart';
+import 'package:khujo_app/provider/datas_provider.dart';
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
+import 'package:khujo_app/screens/profile/bookings/rating_screen.dart';
 
-class CompletedBookingHpScreen extends StatefulWidget {
+class CompletedBookingHpScreen extends ConsumerStatefulWidget {
   final BookingModel bookingData;
+  final String currentUserId;
 
-  const CompletedBookingHpScreen({super.key, required this.bookingData});
+  const CompletedBookingHpScreen({
+    super.key,
+    required this.bookingData,
+    required this.currentUserId,
+  });
 
   @override
-  State<CompletedBookingHpScreen> createState() =>
+  ConsumerState<CompletedBookingHpScreen> createState() =>
       _BookingDetailedScreenState();
 }
 
-class _BookingDetailedScreenState extends State<CompletedBookingHpScreen> {
+class _BookingDetailedScreenState
+    extends ConsumerState<CompletedBookingHpScreen> {
   late BookingModel booking;
 
   @override
@@ -24,9 +34,6 @@ class _BookingDetailedScreenState extends State<CompletedBookingHpScreen> {
     super.initState();
     booking = widget.bookingData;
   }
-
-  // Submit Rating
-  Future<void> _submitRating() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +45,14 @@ class _BookingDetailedScreenState extends State<CompletedBookingHpScreen> {
   }
 
   Widget _buildBookingContent() {
+    final userReviewed = ref.watch(
+      checkUserReviewProvider(
+        ReviewParams(
+          userId: widget.currentUserId,
+          bookingId: widget.bookingData.bookingId,
+        ),
+      ),
+    );
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -48,24 +63,48 @@ class _BookingDetailedScreenState extends State<CompletedBookingHpScreen> {
           _buildServicesCard(),
           _buildPaymentSummaryCard(),
           SizedBox(height: 5.h),
-
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15.w),
-            child: Container(
-              width: 1.sw,
-              decoration: BoxDecoration(color: Colors.white),
-              child: Column(
-                children: [
-                  SizedBox(height: 20.h),
-                  Text(
-                    "Rate Your Experience",
-                    style: TextStyle(fontSize: 19.sp),
-                  ),
-                  SizedBox(height: 10.h),
-                ],
+          // Rating Section
+          userReviewed.when(
+            data: (reviewData) {
+              if (reviewData == null) {
+                // User hasn't reviewed yet - show rating button
+                return _buildRatingCard(
+                  onTaped: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            RatingScreen(bookingData: widget.bookingData),
+                      ),
+                    );
+                  },
+                );
+              }
+              // User has already reviewed - show their review
+              return _buildReviewDisplay(reviewData);
+            },
+            error: (err, _) => Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15.w),
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(15.r),
+                ),
+                child: Text(
+                  "Error loading review: $err",
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
+            loading: () => Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
+              child: Center(
+                child: CircularProgressIndicator(),
               ),
             ),
           ),
+
           SizedBox(height: 50.h),
         ],
       ),
@@ -343,34 +382,6 @@ class _BookingDetailedScreenState extends State<CompletedBookingHpScreen> {
     );
   }
 
-  // Widget _buildCancelButton() {
-  //   return Padding(
-  //     padding: EdgeInsets.symmetric(horizontal: 20.w),
-  //     child: SizedBox(
-  //       width: double.infinity,
-  //       child: OutlinedButton.icon(
-  //         onPressed: _cancelBooking,
-  //         icon: const Icon(Icons.cancel_outlined),
-  //         label: Text(
-  //           'Cancel Booking',
-  //           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-  //         ),
-  //         style: OutlinedButton.styleFrom(
-  //           foregroundColor: Colors.red,
-  //           side: const BorderSide(color: Colors.red, width: 2),
-  //           padding: EdgeInsets.symmetric(vertical: 14.h),
-  //           shape: RoundedRectangleBorder(
-  //             borderRadius: BorderRadius.circular(12.r),
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // All the helper widgets (_buildStatusBadge, _buildCard, _buildInfoRow, _buildPaymentStatusRow)
-  // remain the same as before...
-
   Widget _buildStatusBadge(String status) {
     Color color;
     String text;
@@ -572,6 +583,160 @@ class _BookingDetailedScreenState extends State<CompletedBookingHpScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReviewDisplay(reviewData) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 15.w),
+      child: Container(
+        width: 1.sw,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 20.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.green.shade50, Colors.green.shade50],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(5.r),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 5.w,
+                        vertical: 3.h,
+                      ),
+                      child: Icon(Icons.check_circle, color: Colors.green),
+                    ),
+                  ),
+                  SizedBox(width: 15.w),
+                  Text(
+                    "Your Review",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 15.h),
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    Iconsax.star1,
+                    size: 25.sp,
+                    color: index < reviewData.stars
+                        ? Colors.amber
+                        : Colors.grey.shade300,
+                  );
+                }),
+              ),
+              SizedBox(height: 10.h),
+              Text(
+                reviewData.feedBack,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  color: Colors.grey.shade700,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _buildRatingCard extends StatelessWidget {
+  final VoidCallback onTaped;
+  const _buildRatingCard({super.key, required this.onTaped});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 15.w),
+      child: Container(
+        width: 1.sw,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15.r),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 18.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 20.h),
+              Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.shade50, Colors.blue.shade50],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(5.r),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 5.w,
+                        vertical: 3.h,
+                      ),
+                      child: Icon(Icons.star, color: Colors.amber),
+                    ),
+                  ),
+                  SizedBox(width: 15.w),
+                  Text(
+                    "Rate Your Experience",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppConstants.primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                ),
+                onPressed: onTaped,
+                child: Center(
+                  child: Text(
+                    "Rate it!",
+                    style: TextStyle(color: Colors.white, fontSize: 18.sp),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20.h),
+            ],
+          ),
+        ),
       ),
     );
   }

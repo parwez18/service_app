@@ -1,6 +1,4 @@
-import 'dart:ffi';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -89,6 +87,27 @@ class _AddBookingServiceScreenState
     required String serviceProviderId,
   }) async {
     try {
+      // For checking Subscription of Service Provider
+      // Check subscription before saving
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .get();
+      final subStatus =
+          userDoc.data()?['subscription']?['status'] as String? ?? 'inactive';
+
+      if (subStatus != 'active') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Your subscription has expired. Please renew to add services.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       if (!_key.currentState!.validate()) return;
       if (selectedImage == null) {
         ScaffoldMessenger.of(
@@ -118,7 +137,7 @@ class _AddBookingServiceScreenState
         "parent": "Booking Service",
         'serviceCategory': selectedSubServiceType,
         'isOpen': true,
-        "isActive": true,
+        "isActive": false,
         'providerAddress': userAddress,
         "lat": providerLat,
         "lng": providerLng,
@@ -133,12 +152,10 @@ class _AddBookingServiceScreenState
         const SnackBar(content: Text('Service added successfully!')),
       );
 
-      _key.currentState?.reset();
-      setState(() {
-        selectedImage = null;
-      });
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      Navigator.pop(context);
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(true);
     } catch (e) {
       if (!mounted) return;
 
@@ -242,6 +259,13 @@ class _AddBookingServiceScreenState
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                       ),
+                      dropdownStyleData: DropdownStyleData(
+                        decoration: BoxDecoration(
+                          color: Colors.white, // dropdown menu bg
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                      ),
+
                       hint: const Text("Select Service Categorie"),
                       items: categoryTitles
                           .map(
@@ -399,8 +423,10 @@ class _AddBookingServiceScreenState
                     // Start day
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        dropdownColor: Colors.white,
                         decoration: InputDecoration(
                           labelText: "Start Day",
+
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.r),
                           ),
@@ -428,6 +454,7 @@ class _AddBookingServiceScreenState
                     // End day
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        dropdownColor: Colors.white,
                         decoration: InputDecoration(
                           labelText: "End Day",
                           border: OutlineInputBorder(

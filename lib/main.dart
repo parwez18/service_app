@@ -4,17 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:khujo_app/firebase_options.dart';
-import 'package:khujo_app/screens/home/home_m_screen.dart';
-import 'package:khujo_app/screens/home/location_search_screen.dart';
-import 'package:khujo_app/screens/home/location_top_bar_widget.dart';
-
-import 'package:khujo_app/screens/login/send_otp_screen.dart';
-
-import 'package:khujo_app/screens/login/user_name_type.dart';
-import 'package:khujo_app/screens/m_screen.dart';
-import 'package:khujo_app/service_provider/screens/provider_booking_detail_screen.dart';
-import 'package:khujo_app/service_provider/screens/travel_and_market_service.dart/add_services_screen.dart';
-import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
+import 'package:khujo_app/screens/subscription/sp_subscription_screen.dart';
 import 'package:khujo_app/services/notifiction_service.dart';
 import 'package:khujo_app/splash_screen.dart';
 

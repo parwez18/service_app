@@ -3,12 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:khujo_app/models/booking_service_model.dart';
 import 'package:khujo_app/models/service_item_model.dart';
+import 'package:khujo_app/provider/datas_provider.dart';
 import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/repository/distance_helper.dart';
 import 'package:khujo_app/screens/home/booking_service/booking_confirm_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:khujo_app/screens/home/booking_service/reviews_widget.dart';
 
 class BookingServiceDetailedScreen extends ConsumerStatefulWidget {
   final BookingServiceModel data;
@@ -110,6 +112,11 @@ class _BookingServiceDetailedScreenState
       currentUserDataAsync.lng,
       widget.data.lat,
       widget.data.lng,
+    );
+    // Average Rating
+    final averageRatingAsync = ref.watch(averageRatingProvider(widget.data.id));
+    final allReviewsAsync = ref.watch(
+      reviewByServiceIdProvider(widget.data.id),
     );
     return Scaffold(
       backgroundColor: Colors.white,
@@ -318,6 +325,136 @@ class _BookingServiceDetailedScreenState
                       height: 1.5,
                     ),
                   ),
+                  SizedBox(height: 10.h),
+
+                  // Reviews Section
+                  allReviewsAsync.when(
+                    data: (revieData) {
+                      if (revieData.isEmpty) {
+                        // When Review is 0
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(left: 5.w),
+                                  child: Text(
+                                    "Reviews",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18.sp,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 10.w),
+                              child: Text(
+                                "0.0",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 19.sp,
+                                ),
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                ...List.generate(5, (index) {
+                                  return Icon(
+                                    Iconsax.star1,
+                                    size: 22,
+                                    color: Colors.grey.shade400,
+                                  );
+                                }),
+                                SizedBox(width: 10.w),
+                                Text(
+                                  "( ${allReviewsAsync.value!.length.toString()} Reviews )",
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(left: 5.w),
+                                child: Text(
+                                  "Reviews",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18.sp,
+                                  ),
+                                ),
+                              ),
+                              Spacer(),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ReviewsWidget(
+                                        serviceId: widget.data.id,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  "View Reviews",
+                                  style: TextStyle(
+                                    fontSize: 17.sp,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      80,
+                                      80,
+                                      80,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 10.w),
+                            child: Text(
+                              averageRatingAsync.toStringAsFixed(1),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 19.sp,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              ...List.generate(5, (index) {
+                                return Icon(
+                                  Iconsax.star1,
+                                  size: 22,
+                                  color: index < averageRatingAsync
+                                      ? Colors.amber
+                                      : Colors.grey.shade400,
+                                );
+                              }),
+                              SizedBox(width: 10.w),
+                              Text(
+                                "( ${allReviewsAsync.value!.length.toString()} Reviews )",
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                    error: (err, _) => Center(child: Text(err.toString())),
+                    loading: () => Center(child: CircularProgressIndicator()),
+                  ),
+
                   SizedBox(height: 25.h),
 
                   // Services List

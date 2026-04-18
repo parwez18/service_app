@@ -18,10 +18,38 @@ class BookingDetailedScreen extends StatefulWidget {
 class _BookingDetailedScreenState extends State<BookingDetailedScreen> {
   late BookingModel booking;
 
+  String formatDate(DateTime date) {
+    return DateFormat('EEE, dd MMM yyyy').format(date);
+  }
+
   @override
   void initState() {
     super.initState();
     booking = widget.bookingData;
+  }
+
+  // Update status to cancel for booking cancelation
+  Future<void> _cancelBooking() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(widget.bookingData.bookingId)
+          .update({'status': "canceled", 'updatedAt': Timestamp.now()});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Booking Canceled'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -45,7 +73,8 @@ class _BookingDetailedScreenState extends State<BookingDetailedScreen> {
           _buildPaymentSummaryCard(),
           SizedBox(height: 5.h),
           // For Rejected Bookings
-          widget.bookingData.status == 'rejected'
+          widget.bookingData.status == 'rejected' ||
+                  widget.bookingData.status == 'canceled'
               ? Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15.w),
                   child: Card(
@@ -56,6 +85,7 @@ class _BookingDetailedScreenState extends State<BookingDetailedScreen> {
                         vertical: 10.h,
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildInfoRow(
                             Icons.payment,
@@ -98,6 +128,29 @@ class _BookingDetailedScreenState extends State<BookingDetailedScreen> {
                               ),
                             ],
                           ),
+                          const Divider(),
+                          SizedBox(height: 8.w),
+                          widget.bookingData.status == 'rejected'
+                              ? Text(
+                                  "Rejected At : ${formatDate(booking.updatedAt)}",
+                                  style: TextStyle(
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                )
+                              : SizedBox.shrink(),
+                          widget.bookingData.status == 'canceled'
+                              ? Text(
+                                  "Canceled At : ${formatDate(booking.updatedAt)}",
+                                  style: TextStyle(
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                )
+                              : SizedBox.shrink(),
+                          SizedBox(height: 8.w),
                         ],
                       ),
                     ),
@@ -129,9 +182,119 @@ class _BookingDetailedScreenState extends State<BookingDetailedScreen> {
                 )
               : SizedBox.shrink(),
 
-          // if (booking.status == 'pending' || booking.status == 'accepted')
-          // _buildCancelButton(),
-          SizedBox(height: 30.h),
+          // To Cancel Booking for User by self
+          widget.bookingData.status == 'pending' ||
+                  widget.bookingData.status == 'accepted'
+              ? Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15.w),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(height: 40.h),
+                                  Text(
+                                    "Are you sure, you want to cancel this booking",
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  SizedBox(height: 20.h),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 15.w,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // No Button
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              // No button pressed
+                                              Navigator.of(context).pop();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12.r),
+                                              ),
+                                              elevation: 2,
+                                            ),
+                                            child: Text(
+                                              'No',
+                                              style: TextStyle(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 16.w),
+                                        // Yes Button
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () async {
+                                              // Yes button pressed
+                                              await _cancelBooking();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.green,
+                                              foregroundColor: Colors.white,
+
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12.r),
+                                              ),
+                                              elevation: 2,
+                                            ),
+                                            child: Text(
+                                              'Yes',
+                                              style: TextStyle(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 40.h),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: Center(
+                      child: Text(
+                        "Cancel Booking",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                )
+              : SizedBox.shrink(),
+
+          SizedBox(height: 60.h),
         ],
       ),
     );

@@ -18,6 +18,10 @@ class BookingDetailedSPScreen extends StatefulWidget {
 class _BookingDetailedScreenState extends State<BookingDetailedSPScreen> {
   late BookingModel booking;
 
+  String formatDate(DateTime date) {
+    return DateFormat('EEE, dd MMM yyyy').format(date);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +40,7 @@ class _BookingDetailedScreenState extends State<BookingDetailedSPScreen> {
   Widget _buildBookingContent() {
     return SingleChildScrollView(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeaderCard(),
           SizedBox(height: 16.h),
@@ -46,7 +51,45 @@ class _BookingDetailedScreenState extends State<BookingDetailedSPScreen> {
               ? _buildPaymentSummaryCard()
               : SizedBox.shrink(),
           SizedBox(height: 5.h),
-          SizedBox(height: 30.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              width: 1.sw,
+              child: Padding(
+                padding: EdgeInsets.only(left: 10.w, top: 10.h, bottom: 10.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    widget.bookingData.status == 'rejected'
+                        ? Text(
+                            "Rejected At : ${formatDate(booking.updatedAt)}",
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          )
+                        : SizedBox.shrink(),
+                    widget.bookingData.status == 'canceled'
+                        ? Text(
+                            "Canceled At : ${formatDate(booking.updatedAt)}",
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          )
+                        : SizedBox.shrink(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 50.h),
         ],
       ),
     );

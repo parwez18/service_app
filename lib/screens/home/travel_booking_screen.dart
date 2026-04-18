@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,6 +23,22 @@ class TravelBookingScreen extends ConsumerStatefulWidget {
 
 class _TravelBookingScreenState extends ConsumerState<TravelBookingScreen> {
   int selectedIndex = 0;
+
+  Widget _buildNetworkImage(String path, {double? height}) {
+    if (path.startsWith('data:image')) {
+      final base64String = path.split(',').last;
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.w),
+        child: Image.memory(base64Decode(base64String), height: height),
+      );
+    } else {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.w),
+        child: Image.network(path, height: height),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final allTravelBookingCategoriesAsync = ref.watch(
@@ -119,13 +137,9 @@ class _TravelBookingScreenState extends ConsumerState<TravelBookingScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.network(
+                              _buildNetworkImage(
                                 data.logoPath,
-                                height: 41.h,
-                                color: isSelected
-                                    ? Colors.white
-                                    : AppConstants.primaryColor,
-                                colorBlendMode: BlendMode.srcIn,
+                                // height: 41.h,
                               ),
                               SizedBox(height: 3.h),
                               Center(

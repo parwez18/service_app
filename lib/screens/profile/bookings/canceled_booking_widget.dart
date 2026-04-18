@@ -5,17 +5,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:khujo_app/provider/datas_provider.dart';
 import 'package:khujo_app/screens/profile/bookings/booking_detailed_screen.dart';
-import 'package:khujo_app/screens/profile/bookings/completed_booking_HP_screen.dart';
 
-class CompletedBookingWidget extends ConsumerStatefulWidget {
-  const CompletedBookingWidget({super.key});
+class CanceledBookingWidget extends ConsumerStatefulWidget {
+  const CanceledBookingWidget({super.key});
 
   @override
-  ConsumerState<CompletedBookingWidget> createState() =>
-      _PendingBookingWidgetState();
+  ConsumerState<CanceledBookingWidget> createState() =>
+      _CanceledBookingWidgetState();
 }
 
-class _PendingBookingWidgetState extends ConsumerState<CompletedBookingWidget> {
+class _CanceledBookingWidgetState extends ConsumerState<CanceledBookingWidget> {
   String formatDate(DateTime date) {
     return DateFormat('EEE, dd MMM yyyy').format(date);
   }
@@ -23,11 +22,11 @@ class _PendingBookingWidgetState extends ConsumerState<CompletedBookingWidget> {
   @override
   Widget build(BuildContext context) {
     final userId = FirebaseAuth.instance.currentUser!.uid;
-    final completedBookingsAsync = ref.watch(completedBookingsProvider(userId));
-    return completedBookingsAsync.when(
+    final canceledBookingsAsync = ref.watch(canceledBookingsProvider(userId));
+    return canceledBookingsAsync.when(
       data: (bookingData) {
         if (bookingData.isEmpty) {
-          return Center(child: Text("No Booking yet"));
+          return Center(child: Text("No Canceled Booking"));
         }
         return ListView.builder(
           itemCount: bookingData.length,
@@ -39,10 +38,7 @@ class _PendingBookingWidgetState extends ConsumerState<CompletedBookingWidget> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => CompletedBookingHpScreen(
-                      bookingData: data,
-                      currentUserId: userId,
-                    ),
+                    builder: (_) => BookingDetailedScreen(bookingData: data),
                   ),
                 );
               },
@@ -157,7 +153,7 @@ class _PendingBookingWidgetState extends ConsumerState<CompletedBookingWidget> {
                                       vertical: 5.h,
                                     ),
                                     child: Text(
-                                      "Completed",
+                                      "Rejected",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w500,

@@ -16,8 +16,8 @@ class AuthRepository {
     await _auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       timeout: const Duration(seconds: 60),
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await _auth.signInWithCredential(credential);
+      verificationCompleted: (PhoneAuthCredential credential) {
+        // Auto sign-in disabled — user must manually enter OTP
       },
       verificationFailed: (FirebaseAuthException ex) {
         throw Exception("Verification failed: ${ex.message}");
@@ -33,7 +33,7 @@ class AuthRepository {
   }
 
   // Verify OTP
-  Future<User?> verifyOTP(String smsCode) async {
+  Future<Map<String, dynamic>> verifyOTP(String smsCode) async {
     try {
       if (_verificationId == null) {
         throw Exception("No verification ID found");
@@ -47,26 +47,48 @@ class AuthRepository {
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
 
+      String? userType;
+      bool isNewUser = true;
+
       if (user != null) {
         final userDocRef = _firestore.collection("users").doc(user.uid);
         final userDoc = await userDocRef.get();
         if (!userDoc.exists) {
-          // Create new user document with empty fields
           await userDocRef.set({
             "uid": user.uid,
             "name": "",
             "phoneNumber": user.phoneNumber,
-            "userType": "", // Customer or Service Provider
-            "userRoles": [], // Array of roles: Plumber, Doctor, Electrician
+            "userType": "",
+            "userRoles": [],
             "userImage": "",
             "userAddress": "",
             "isVerified": false,
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp(),
+
+            // For Service Providers
+            "subscription": {
+              "status": "inactive",
+              "introPaid": false,
+              "introPaymentId": "",
+              "introPaidAt": null,
+              "razorpaySubscriptionId": "",
+              "razorpayCustomerId": "",
+              "startDate": null,
+              "currentPeriodEnd": null,
+              "nextBillingDate": null,
+              "cyclesCharged": 0,
+              "lastChargedAt": null,
+              "cancelledAt": null,
+              "failureReason": "",
+            },
           });
+        } else {
+          isNewUser = false;
+          userType = userDoc.data()?['userType'] as String?;
         }
       }
-      return user;
+      return {'user': user, 'isNewUser': isNewUser, 'userType': userType};
     } on FirebaseAuthException catch (e) {
       throw Exception("OTP verification failed: ${e.message}");
     } catch (e) {

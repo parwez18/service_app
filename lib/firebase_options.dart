@@ -57,19 +57,20 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD8wAix4r6fq-KB5hNK-TyYbbcfQvOFNmQ',
-    appId: '1:151412764105:android:73f449318081f989660c18',
-    messagingSenderId: '151412764105',
-    projectId: 'grofood-385a9',
-    storageBucket: 'grofood-385a9.firebasestorage.app',
+    apiKey: 'AIzaSyAr5WfxV0BQ08ZjkOswTpqIpMOchL5AZj8',
+    appId: '1:422163263380:android:c1c5e3b5993eee356de981',
+    messagingSenderId: '422163263380',
+    projectId: 'khujo-app',
+    storageBucket: 'khujo-app.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDw5uv8m6XH3tXdhJvH9vzay5haImhMv4M',
-    appId: '1:151412764105:ios:f6c3731dc46370b4660c18',
-    messagingSenderId: '151412764105',
-    projectId: 'grofood-385a9',
-    storageBucket: 'grofood-385a9.firebasestorage.app',
+    apiKey: 'AIzaSyD2wajADN6R9D4IVfwc7UdAIbzqPI-EvZk',
+    appId: '1:422163263380:ios:1a490c3d9431eac46de981',
+    messagingSenderId: '422163263380',
+    projectId: 'khujo-app',
+    storageBucket: 'khujo-app.firebasestorage.app',
     iosBundleId: 'com.example.khujoApp',
   );
+
 }

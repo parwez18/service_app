@@ -23,6 +23,11 @@ class BookingServiceScreen extends ConsumerStatefulWidget {
 class _BookingServiceScreenState extends ConsumerState<BookingServiceScreen> {
   int selectedIndex = 0;
   String selectedCategory = "Salon";
+  List<String> imgPath = [
+    'assets/images/salon.png',
+    'assets/images/medicalstore.png',
+    'assets/images/doctor.png',
+  ];
   @override
   Widget build(BuildContext context) {
     final allBookingServiceCategoriesAsync = ref.watch(
@@ -73,19 +78,16 @@ class _BookingServiceScreenState extends ConsumerState<BookingServiceScreen> {
                           borderRadius: BorderRadius.circular(10.r),
                         ),
                         child: Padding(
-                          padding: EdgeInsets.all(5.0),
+                          padding: EdgeInsets.symmetric(vertical: 13.h),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.network(
-                                data.logoPath,
-                                height: 48.h,
-                                color: isSelected
-                                    ? Colors.white
-                                    : AppConstants.primaryColor,
-                                colorBlendMode: BlendMode.srcIn,
+                              Expanded(
+                                child: Image.asset(
+                                  imgPath[index],
+                                  fit: BoxFit.contain,
+                                ),
                               ),
-                              SizedBox(height: 5.h),
                               Center(
                                 child: Text(
                                   data.title,

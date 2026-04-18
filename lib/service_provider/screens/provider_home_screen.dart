@@ -41,6 +41,7 @@ class _AddServicesScreenState extends ConsumerState<ProviderHomeScreen> {
         onPressed: () {
           // Show Bottom Sheets
           showModalBottomSheet(
+            backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(10),

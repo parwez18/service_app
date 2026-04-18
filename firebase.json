@@ -1,6 +1,1 @@
-
-
-  
-{  "functions": {
-    "source": "functions"
-  },"flutter":{"platforms":{"android":{"default":{"projectId":"grofood-385a9","appId":"1:151412764105:android:73f449318081f989660c18","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"grofood-385a9","configurations":{"android":"1:151412764105:android:73f449318081f989660c18","ios":"1:151412764105:ios:f6c3731dc46370b4660c18","web":"1:151412764105:web:ffcbe70c3f256433660c18"}}}}}}
+{"functions":{"source":"functions"},"flutter":{"platforms":{"android":{"default":{"projectId":"khujo-app","appId":"1:422163263380:android:c1c5e3b5993eee356de981","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"khujo-app","configurations":{"android":"1:422163263380:android:c1c5e3b5993eee356de981","ios":"1:422163263380:ios:1a490c3d9431eac46de981"}}}}}}

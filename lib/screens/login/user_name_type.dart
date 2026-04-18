@@ -8,8 +8,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:khujo_app/repository/location_repository.dart';
-
 import 'package:khujo_app/screens/m_screen.dart';
+import 'package:khujo_app/screens/subscription/sp_subscription_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
 
 class UserNameTypeScreen extends StatefulWidget {
@@ -53,9 +53,10 @@ class _UserNameTypeScreenState extends State<UserNameTypeScreen> {
             MaterialPageRoute(builder: (_) => MScreen()),
           );
         } else {
+          // New SP must pay ₹8 intro first
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => ProviderMScreen()),
+            MaterialPageRoute(builder: (_) => SPSubscriptionScreen()),
           );
         }
         setState(() {
@@ -117,6 +118,12 @@ class _UserNameTypeScreenState extends State<UserNameTypeScreen> {
                     labelText: "User Type",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  dropdownStyleData: DropdownStyleData(
+                    decoration: BoxDecoration(
+                      color: Colors.white, // dropdown menu bg
+                      borderRadius: BorderRadius.circular(10.r),
                     ),
                   ),
                   items: [

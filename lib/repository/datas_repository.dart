@@ -3,6 +3,7 @@ import 'package:khujo_app/models/booking_model.dart';
 import 'package:khujo_app/models/booking_service_model.dart';
 import 'package:khujo_app/models/categories_model.dart';
 import 'package:khujo_app/models/parent_categories_model.dart';
+import 'package:khujo_app/models/review_model.dart';
 
 import 'package:khujo_app/models/services_model.dart';
 
@@ -199,12 +200,13 @@ class DatasRepository {
   // Upcoming Booking for specific user
   Stream<List<BookingModel>> getUpcomingBookings(String userId) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day); // Start of today
     return _firestore
         .collection('bookings')
         .where('userId', isEqualTo: userId)
         .where('status', isEqualTo: 'accepted')
         .where('paymentStatus', isEqualTo: 'paid')
-        .where('bookingDate', isGreaterThan: now)
+        .where('bookingDate', isGreaterThanOrEqualTo: today) // Today or future
         .orderBy('bookingDate', descending: false)
         .snapshots()
         .map((snap) {
@@ -257,6 +259,20 @@ class DatasRepository {
         );
   }
 
+  // Canceled Bookings
+  Stream<List<BookingModel>> getCanceledBookings(String userId) {
+    return _firestore
+        .collection('bookings')
+        .where('userId', isEqualTo: userId)
+        .where('status', isEqualTo: 'canceled')
+        .where('paymentStatus', isEqualTo: 'paid')
+        .snapshots()
+        .map(
+          (snap) =>
+              snap.docs.map((doc) => BookingModel.fromMap(doc.data())).toList(),
+        );
+  }
+
   // Get booking by ID (stream)
   Stream<BookingModel> getBookingById(String bookingId) {
     return _firestore.collection('bookings').doc(bookingId).snapshots().map((
@@ -293,12 +309,13 @@ class DatasRepository {
     String serviceProviderId,
   ) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day); // Start of today
     return _firestore
         .collection('bookings')
         .where('serviceProviderId', isEqualTo: serviceProviderId)
         .where('status', isEqualTo: 'accepted')
         .where('paymentStatus', isEqualTo: 'paid')
-        .where('bookingDate', isGreaterThan: now)
+        .where('bookingDate', isGreaterThanOrEqualTo: today) // Today or future
         .orderBy('bookingDate') // 🔥 required (ASC by default)
         .orderBy('createdAt') // ✅ ASC
         .snapshots()
@@ -358,5 +375,97 @@ class DatasRepository {
           (snap) =>
               snap.docs.map((doc) => BookingModel.fromMap(doc.data())).toList(),
         );
+  }
+
+  // Canceled Booking for Service Provider
+  Stream<List<BookingModel>> getCanceledBookingsForProvider(
+    String serviceProviderId,
+  ) {
+    return _firestore
+        .collection('bookings')
+        .where('serviceProviderId', isEqualTo: serviceProviderId)
+        .where('status', isEqualTo: 'canceled')
+        .where('paymentStatus', isEqualTo: 'paid')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snap) =>
+              snap.docs.map((doc) => BookingModel.fromMap(doc.data())).toList(),
+        );
+  }
+
+  /////////////////////////////// Reviews //////////////////////////////////
+  // To get Reviews for specific service
+  Stream<List<ReviewModel>> getReviewByServiceId(String serviceId) {
+    return _firestore
+        .collection('bookingServices')
+        .doc(serviceId)
+        .collection('reviews')
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => ReviewModel.fromMap(doc.data()))
+              .toList();
+        });
+  }
+
+  // To get Review and check the user has reviewed or not
+  // Stream<ReviewModel?> getReviewByUser({
+  //   required String userId,
+  //   required String bookedServiceId,
+  //   required String bookingId,
+  // }) {
+  //   // Use bookingId as document ID to fetch the review directly
+  //   return _firestore
+  //       .collection('bookingServices')
+  //       .doc(bookedServiceId)
+  //       .collection('reviews')
+  //       .doc(bookingId)
+  //       .snapshots()
+  //       .map((doc) {
+  //         // If document doesn't exist, user hasn't reviewed yet
+  //         if (!doc.exists || doc.data() == null) {
+  //           return null;
+  //         }
+
+  //         return ReviewModel.fromMap(doc.data()!);
+  //       });
+  // }
+
+  // To get that user has rated or not if yes then get data
+  Stream<ReviewModel?> checkReviewByUser({
+    required String bookingId,
+    required String userId,
+  }) {
+    print('🔍 Checking review for bookingId: $bookingId, userId: $userId');
+    print('🔍 Path: bookings/$bookingId/reviews/$userId');
+
+    return _firestore
+        .collection('bookings')
+        .doc(bookingId)
+        .collection('reviews')
+        .doc(userId)
+        .snapshots()
+        .handleError((error) {
+          print('❌ ERROR in stream: $error');
+          return null;
+        })
+        .map((doc) {
+          print('📄 Document exists: ${doc.exists}');
+          print('📄 Document data: ${doc.data()}');
+
+          if (!doc.exists || doc.data() == null) {
+            print('❌ No review found - returning null');
+            return null;
+          }
+
+          print('✅ Review found - parsing data');
+          try {
+            return ReviewModel.fromMap(doc.data()!);
+          } catch (e) {
+            print('❌ ERROR parsing ReviewModel: $e');
+            return null;
+          }
+        });
   }
 }

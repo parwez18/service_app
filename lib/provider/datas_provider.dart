@@ -4,6 +4,7 @@ import 'package:khujo_app/models/booking_model.dart';
 import 'package:khujo_app/models/booking_service_model.dart';
 import 'package:khujo_app/models/categories_model.dart';
 import 'package:khujo_app/models/parent_categories_model.dart';
+import 'package:khujo_app/models/review_model.dart';
 
 import 'package:khujo_app/models/services_model.dart';
 import 'package:khujo_app/provider/user_provider.dart';
@@ -235,6 +236,13 @@ final rejectedBookingsProvider =
       return repo.getRejectedBookings(userId);
     });
 
+// To get All Canceled Bookings for specific user
+final canceledBookingsProvider =
+    StreamProvider.family<List<BookingModel>, String>((ref, userId) {
+      final repo = ref.read(datasProviderRepository);
+      return repo.getCanceledBookings(userId);
+    });
+
 // Provider to get a single booking by ID
 final bookingByIdProvider = StreamProvider.family<BookingModel, String>((
   ref,
@@ -278,4 +286,91 @@ final rejectedBookingforProviderProvider =
     StreamProvider.family<List<BookingModel>, String>((ref, serviceProviderId) {
       final repo = ref.read(datasProviderRepository);
       return repo.getRejectedBookingsForProvider(serviceProviderId);
+    });
+
+// For Rejected Bookings for Service Provider
+final canceledBookingforProviderProvider =
+    StreamProvider.family<List<BookingModel>, String>((ref, serviceProviderId) {
+      final repo = ref.read(datasProviderRepository);
+      return repo.getCanceledBookingsForProvider(serviceProviderId);
+    });
+
+/////////////////////////////// Reviews Provider //////////////////////////////////
+// Get Reviews by service Id for specific service
+final reviewByServiceIdProvider =
+    StreamProvider.family<List<ReviewModel>, String>((ref, serviceId) {
+      final repo = ref.read(datasProviderRepository);
+      return repo.getReviewByServiceId(serviceId);
+    });
+
+// To find average reviews
+final averageRatingProvider = Provider.family<double, String>((ref, serviceId) {
+  final reviewsAsync = ref.watch(reviewByServiceIdProvider(serviceId));
+
+  return reviewsAsync.when(
+    data: (reviews) {
+      if (reviews.isEmpty) return 0.0;
+
+      final totalStars = reviews.fold<int>(
+        0,
+        (sum, review) => sum + review.stars,
+      );
+
+      return totalStars / reviews.length;
+    },
+    loading: () => 0.0,
+    error: (_, __) => 0.0,
+  );
+});
+
+// class ReviewParams {
+//   final String userId;
+//   final String bookedServiceId;
+//   final String bookingId;
+
+//   ReviewParams({
+//     required this.userId,
+//     required this.bookedServiceId,
+//     required this.bookingId,
+//   });
+// }
+
+// final userReviewOrNotProvider =
+//     StreamProvider.family<ReviewModel?, ReviewParams>((ref, params) {
+//       final repo = ref.read(datasProviderRepository);
+
+//       return repo.getReviewByUser(
+//         userId: params.userId,
+//         bookedServiceId: params.bookedServiceId,
+//         bookingId: params.bookingId,
+//       );
+//     });
+
+class ReviewParams {
+  final String userId;
+  final String bookingId;
+
+  ReviewParams({required this.userId, required this.bookingId});
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ReviewParams &&
+        other.userId == userId &&
+        other.bookingId == bookingId;
+  }
+
+  @override
+  int get hashCode => userId.hashCode ^ bookingId.hashCode;
+}
+
+// Check if user has reviewed a specific booking
+final checkUserReviewProvider =
+    StreamProvider.family<ReviewModel?, ReviewParams>((ref, params) {
+      final repo = ref.read(datasProviderRepository);
+
+      return repo.checkReviewByUser(
+        userId: params.userId,
+        bookingId: params.bookingId,
+      );
     });

@@ -9,6 +9,7 @@ import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
 import 'package:khujo_app/screens/profile/address_screen.dart';
 import 'package:khujo_app/screens/profile/edit_profile_screen.dart';
+import 'package:khujo_app/screens/profile/help_support_screen.dart';
 
 class ProviderProfileScreen extends ConsumerStatefulWidget {
   const ProviderProfileScreen({super.key});
@@ -69,19 +70,16 @@ class _ProfileScreenState extends ConsumerState<ProviderProfileScreen> {
                   },
                 ),
                 SizedBox(height: 5.h),
+
                 // Help & Support
                 _buildSections(
                   icon: Icons.help_outline,
                   title: "Help & Support",
                   onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (_) => HelpSupportScreen(
-                    //       userGender: datas.gender.toString(),
-                    //     ),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => HelpSupportScreen()),
+                    );
                   },
                 ),
                 SizedBox(height: 5.h),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,6 +19,25 @@ class CategoriesOptionsScreen extends ConsumerStatefulWidget {
 
 class _CategoriesOptionsScreenState
     extends ConsumerState<CategoriesOptionsScreen> {
+  Widget _buildNetworkImage(String path, {double? height, Color? color}) {
+    if (path.startsWith('data:image')) {
+      final base64String = path.split(',').last;
+      return Image.memory(
+        base64Decode(base64String),
+        height: height,
+        color: color,
+        colorBlendMode: color != null ? BlendMode.srcIn : null,
+      );
+    } else {
+      return Image.network(
+        path,
+        height: height,
+        color: color,
+        colorBlendMode: color != null ? BlendMode.srcIn : null,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final allCategoriesAsync = ref.watch(allCategoriesListProvider);
@@ -59,11 +80,10 @@ class _CategoriesOptionsScreenState
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.network(
+                          _buildNetworkImage(
                             data.logoPath,
                             height: 43.h,
-                            color: AppConstants.primaryColor,
-                            colorBlendMode: BlendMode.srcIn,
+                            // color: AppConstants.primaryColor,
                           ),
                           SizedBox(height: 3.h),
                           Center(
