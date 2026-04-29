@@ -8,8 +8,6 @@ import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/provider/user_provider.dart';
 import 'package:khujo_app/screens/login/user_name_type.dart';
 import 'package:khujo_app/screens/m_screen.dart';
-import 'package:khujo_app/screens/subscription/sp_subscription_mandate_screen.dart';
-import 'package:khujo_app/screens/subscription/sp_subscription_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
 import 'package:khujo_app/services/notifiction_service.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -132,48 +130,12 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                             MaterialPageRoute(builder: (_) => const MScreen()),
                           );
                         } else {
-                          // Existing Service Provider — check subscription status
-                          final uid =
-                              FirebaseAuth.instance.currentUser?.uid ?? '';
-                          final doc = await FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(uid)
-                              .get();
-                          final sub =
-                              doc.data()?['subscription']
-                                  as Map<String, dynamic>? ??
-                              {};
-                          final subStatus =
-                              sub['status'] as String? ?? 'inactive';
-                          final introPaid = sub['introPaid'] as bool? ?? false;
-                          final phone =
-                              doc.data()?['phoneNumber'] as String? ?? '';
-
-                          if (!mounted) return;
-
-                          if (subStatus == 'active') {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ProviderMScreen(),
-                              ),
-                            );
-                          } else if (introPaid) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    SPSubscriptionMandateScreen(phone: phone),
-                              ),
-                            );
-                          } else {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SPSubscriptionScreen(),
-                              ),
-                            );
-                          }
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProviderMScreen(),
+                            ),
+                          );
                         }
                       } catch (e) {
                         if (!mounted) return;

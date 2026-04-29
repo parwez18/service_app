@@ -1,10 +1,9 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:khujo_app/services/cloudinary_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -46,22 +45,8 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
     }
   }
 
-  // Upload Image to firebase
-  Future<String?> _uploadImageToFirebase(File imageFile) async {
-    try {
-      // New unique file name
-      final filename = 'services/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      // Reference to Firebase Storage
-      final ref = FirebaseStorage.instance.ref().child(filename);
-      // Upload the image
-      await ref.putFile(imageFile);
-      // Get the download URL
-      final downloadUrl = await ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      print("Error uploading image: $e");
-      return null;
-    }
+  Future<String?> _uploadImage(File imageFile) {
+    return CloudinaryService.uploadImage(imageFile, folder: 'services');
   }
 
   // Add Service
@@ -82,7 +67,7 @@ class _AddServicesScreenState extends ConsumerState<AddServicesScreen> {
       }
 
       setState(() => isLoading = true);
-      final imageUrl = await _uploadImageToFirebase(_selectedImage!);
+      final imageUrl = await _uploadImage(_selectedImage!);
       final docRef = FirebaseFirestore.instance.collection('services').doc();
       await docRef.set({
         "id": docRef.id,

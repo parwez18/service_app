@@ -9,8 +9,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:khujo_app/appconstants/appconstants.dart';
 import 'package:khujo_app/screens/login/send_otp_screen.dart';
 import 'package:khujo_app/screens/m_screen.dart';
-import 'package:khujo_app/screens/subscription/sp_subscription_mandate_screen.dart';
-import 'package:khujo_app/screens/subscription/sp_subscription_screen.dart';
 import 'package:khujo_app/service_provider/screens/provider_m_screen.dart';
 import 'package:khujo_app/services/notifiction_service.dart';
 
@@ -92,31 +90,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         );
         NotificationService.handlePendingNavigation();
       } else if (userType == "Service Provider") {
-        final sub =
-            userData?['subscription'] as Map<String, dynamic>? ?? {};
-        final subStatus = sub['status'] as String? ?? 'inactive';
-        final introPaid = sub['introPaid'] as bool? ?? false;
-        final phone = userData?['phoneNumber'] as String? ?? '';
-
-        if (subStatus == 'active') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => ProviderMScreen()),
-          );
-        } else if (introPaid) {
-          // ₹8 already paid — skip to autopay setup page
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => SPSubscriptionMandateScreen(phone: phone),
-            ),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const SPSubscriptionScreen()),
-          );
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ProviderMScreen()),
+        );
       } else {
         debugPrint("Invalid userType: $userType");
         throw Exception("Invalid user type");
@@ -142,13 +119,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/applogo2.png',
+              'assets/images/applogo.png',
               width: 320.w,
               fit: BoxFit.contain,
             ),
             SizedBox(height: 8.h),
             Text(
-              "Khujo",
+              "Service App",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 35.sp,

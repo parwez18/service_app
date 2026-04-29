@@ -3,8 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:khujo_app/firebase_options.dart';
-import 'package:khujo_app/screens/subscription/sp_subscription_screen.dart';
+
 import 'package:khujo_app/services/notifiction_service.dart';
 import 'package:khujo_app/splash_screen.dart';
 
@@ -13,7 +12,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
 
   // Enable Firebase App Check to remove reCAPTCHA
   await FirebaseAppCheck.instance.activate(
@@ -37,7 +36,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
-        title: 'Khujo App',
+        title: 'Service App',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),

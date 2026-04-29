@@ -98,7 +98,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     var options = {
       "key": "rzp_live_SGO2tMhVaCYczw",
       "amount": widget.bookingData['totalPrice'] * 100,
-      "name": "Khujo App",
+      "name": "Service App",
       "description": "Service Booking Payment",
       "order_id": orderId,
       "prefill": {
