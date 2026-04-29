@@ -1,9 +1,6 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
 import 'package:khujo_app/screens/helper_widgets/appbar_widget.dart';
 import 'package:khujo_app/screens/m_screen.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -20,6 +17,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   late Razorpay _razorpay;
   bool isLoading = false;
 
+  // TODO: Replace with your Razorpay test key
+  static const String _razorpayTestKey = 'rzp_test_ebaOKw4xjzfhCR';
+
   @override
   void initState() {
     super.initState();
@@ -35,72 +35,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.dispose();
   }
 
-  // Step 1: Create order on YOUR server first
-  Future<void> createOrderAndPay() async {
-    setState(() => isLoading = true);
-
-    try {
-      final response = await http.post(
-        Uri.parse(
-          'https://classes.indiandevelopers.org/v3/api/khujo/create-order',
-        ),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'amount': widget.bookingData['totalPrice'],
-          'bookingId': widget.bookingData['bookingId'],
-          'userId': widget.bookingData['userId'],
-          'bookingData': _sanitizeBookingData(widget.bookingData),
-        }),
-      );
-
-      if (kDebugMode) {
-        debugPrint("amount :- ${widget.bookingData['totalPrice']}");
-        debugPrint("bookingId :- ${widget.bookingData['bookingId']}");
-        debugPrint("userId :- ${widget.bookingData['userId']}");
-        debugPrint(
-          "bookingData :- ${_sanitizeBookingData(widget.bookingData)}",
-        );
-      }
-
-      final data = jsonDecode(response.body);
-
-      if (data['success'] == true) {
-        // Now open Razorpay with the order ID
-        _openCheckout(data['orderId']);
-      } else {
-        throw Exception(data['error'] ?? 'Failed to create order');
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  // Convert Timestamp to String for JSON serialization
-  Map<String, dynamic> _sanitizeBookingData(Map<String, dynamic> data) {
-    final sanitized = Map<String, dynamic>.from(data);
-
-    // Convert Timestamp to ISO string for JSON
-    if (sanitized['bookingDate'] is Timestamp) {
-      sanitized['bookingDate'] = (sanitized['bookingDate'] as Timestamp)
-          .toDate()
-          .toIso8601String();
-    }
-
-    return sanitized;
-  }
-
-  // Step 2: Open Razorpay with order_id from server
-  void _openCheckout(String orderId) {
-    var options = {
-      "key": "rzp_live_SGO2tMhVaCYczw",
-      "amount": widget.bookingData['totalPrice'] * 100,
+  void _openCheckout() {
+    final options = {
+      "key": _razorpayTestKey,
+      "amount": (widget.bookingData['totalPrice'] * 100).toInt(),
       "name": "Service App",
       "description": "Service Booking Payment",
-      "order_id": orderId,
       "prefill": {
         "contact": widget.bookingData['userPhone'] ?? "",
         "email": "user@example.com",
@@ -109,64 +49,52 @@ class _PaymentScreenState extends State<PaymentScreen> {
     };
 
     try {
+      setState(() => isLoading = true);
       _razorpay.open(options);
     } catch (e) {
       setState(() => isLoading = false);
-      print("Razorpay Error: $e");
     }
   }
 
-  // Step 3: On success, listen to Firestore for webhook confirmation
   Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    print("Payment Success: ${response.paymentId}");
-    setState(() => isLoading = true);
+    try {
+      final bookingId = widget.bookingData['bookingId'];
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .set({
+            ...widget.bookingData,
+            'paymentId': response.paymentId,
+            'paymentStatus': 'paid',
+            'bookingStatus': 'confirmed',
+            'paidAt': Timestamp.now(),
+          });
 
-    final bookingId = widget.bookingData['bookingId'];
-
-    // Listen to Firestore for booking created by webhook
-    final subscription = FirebaseFirestore.instance
-        .collection('bookings')
-        .doc(bookingId)
-        .snapshots()
-        .listen((snapshot) {
-          if (snapshot.exists && mounted) {
-            setState(() => isLoading = false);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Booking Successful!"),
-                backgroundColor: Colors.blue,
-              ),
-            );
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => MScreen()),
-            );
-          }
-        });
-
-    // Timeout after 30 seconds if webhook hasn't processed
-    await Future.delayed(const Duration(seconds: 30));
-    subscription.cancel();
-
-    if (!mounted) return;
-    if (isLoading) {
+      if (!mounted) return;
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Payment received. Booking is being processed..."),
-          backgroundColor: Colors.orange,
+          content: Text("Booking Successful!"),
+          backgroundColor: Colors.blue,
         ),
       );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => MScreen()),
       );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Payment done but booking save failed: $e"),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 
-  // Handle Payment Error
   void _handlePaymentError(PaymentFailureResponse response) {
-    print("Payment Failed: ${response.message}");
     setState(() => isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -176,10 +104,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  // Handle External Wallet
-  void _handleExternalWallet(ExternalWalletResponse response) {
-    print("External Wallet Selected: ${response.walletName}");
-  }
+  void _handleExternalWallet(ExternalWalletResponse response) {}
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +224,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             ),
                           ),
                           Text(
-                            "${widget.bookingData['totalPrice']}",
+                            "₹${widget.bookingData['totalPrice']}",
                             style: TextStyle(
                               fontSize: 20.sp,
                               fontWeight: FontWeight.bold,
@@ -320,7 +245,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       borderRadius: BorderRadius.circular(13.r),
                     ),
                   ),
-                  onPressed: isLoading ? null : createOrderAndPay,
+                  onPressed: isLoading ? null : _openCheckout,
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 10.h),
                     child: Center(
@@ -334,7 +259,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ],
             ),
           ),
-          // Loading overlay
           if (isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),

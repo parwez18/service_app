@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "401498587575",
+    "project_id": "service-app-24cfd",
+    "storage_bucket": "service-app-24cfd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401498587575:android:d655dad64396161526a832",
+        "android_client_info": {
+          "package_name": "com.serviceapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_w15x6awZG0zspTlDBlv-PRHDxzVuYO0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

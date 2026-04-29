@@ -72,27 +72,6 @@ class _AddBookingServiceScreenState
     required String serviceProviderId,
   }) async {
     try {
-      // For checking Subscription of Service Provider
-      // Check subscription before saving
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .get();
-      final subStatus =
-          userDoc.data()?['subscription']?['status'] as String? ?? 'inactive';
-
-      if (subStatus != 'active') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Your subscription has expired. Please renew to add services.',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       if (!_key.currentState!.validate()) return;
       if (selectedImage == null) {
         ScaffoldMessenger.of(
@@ -359,7 +338,14 @@ class _AddBookingServiceScreenState
                             initialTime: TimeOfDay.now(),
                           );
                           if (time != null) {
-                            openController.text = time.format(context);
+                            final h = time.hourOfPeriod == 0
+                                ? 12
+                                : time.hourOfPeriod;
+                            final m = time.minute.toString().padLeft(2, '0');
+                            final period = time.period == DayPeriod.am
+                                ? 'AM'
+                                : 'PM';
+                            openController.text = '$h:$m $period';
                           }
                         },
                         validator: (value) {
@@ -387,7 +373,14 @@ class _AddBookingServiceScreenState
                             initialTime: TimeOfDay.now(),
                           );
                           if (time != null) {
-                            closeController.text = time.format(context);
+                            final h = time.hourOfPeriod == 0
+                                ? 12
+                                : time.hourOfPeriod;
+                            final m = time.minute.toString().padLeft(2, '0');
+                            final period = time.period == DayPeriod.am
+                                ? 'AM'
+                                : 'PM';
+                            closeController.text = '$h:$m $period';
                           }
                         },
                         validator: (value) {

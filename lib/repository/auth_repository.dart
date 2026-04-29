@@ -65,23 +65,6 @@ class AuthRepository {
             "isVerified": false,
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp(),
-
-            // For Service Providers
-            "subscription": {
-              "status": "inactive",
-              "introPaid": false,
-              "introPaymentId": "",
-              "introPaidAt": null,
-              "razorpaySubscriptionId": "",
-              "razorpayCustomerId": "",
-              "startDate": null,
-              "currentPeriodEnd": null,
-              "nextBillingDate": null,
-              "cyclesCharged": 0,
-              "lastChargedAt": null,
-              "cancelledAt": null,
-              "failureReason": "",
-            },
           });
         } else {
           isNewUser = false;
