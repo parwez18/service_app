@@ -64,10 +64,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
           .doc(bookingId)
           .set({
             ...widget.bookingData,
-            'paymentId': response.paymentId,
+            'razorpayPaymentId': response.paymentId,
             'paymentStatus': 'paid',
-            'bookingStatus': 'confirmed',
+            'status': 'pending',
+            'createdAt': Timestamp.now(),
+            'updatedAt': Timestamp.now(),
             'paidAt': Timestamp.now(),
+            // defaults for fields BookingModel requires
+            'paymentMethod': 'razorpay',
+            'razorpayOrderId': '',
+            'razorpaySignature': '',
+            'refund': '',
+            'otp': 0,
+            'serviceProviderPaid': false,
+            'hasRated': false,
+            'userRating': null,
+            'userReview': null,
+            'ratedAt': null,
           });
 
       if (!mounted) return;
@@ -261,7 +274,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
           if (isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.deepOrange),
               ),
